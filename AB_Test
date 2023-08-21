@@ -1,0 +1,58 @@
+--create user_test_table--
+CREATE TABLE ab_data(
+	"user_id" INTEGER,
+	"timestamp" TIMESTAMP,
+	"group" VARCHAR(20),
+	"landing_page" VARCHAR(20),
+	"converted" SMALLINT
+);
+
+--create user_country_table--
+CREATE TABLE countries(
+	user_id INTEGER,
+	country CHAR(2)
+);
+
+--import the user_test data--
+COPY ab_data
+FROM '/home/xrander/Documents/Data Science/Personal Project/A_B-Testing/ab_data.csv'
+WITH(FORMAT CSV, HEADER);
+
+
+--import the country data--
+COPY countries
+FROM '/home/xrander/Documents/Data Science/Personal Project/A_B-Testing/countries.csv'
+WITH(FORMAT CSV, HEADER);
+
+--preview the data--
+SELECT *
+FROM ab_data;
+
+SELECT *
+FROM countries;
+
+-- Total number of observations--
+--user_data--
+SELECT COUNT(*)
+FROM ab_data;
+
+--country_data--
+SELECT COUNT(*)
+FROM countries;
+
+
+-- Data Preview--
+SELECT DISTINCT country
+FROM countries;
+
+-- Number of the groups of the treatment--
+SELECT "group", COUNT("group")
+FROM ab_data
+GROUP BY "group";
+-- The group seems to be almost equal.--
+
+-- JOINING TABLES
+CREATE TABLE complete_data AS
+SELECT *
+FROM ab_data LEFT JOIN countries
+ON ab_data.user_id = countries.user_id;
