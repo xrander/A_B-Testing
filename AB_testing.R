@@ -58,8 +58,6 @@ max(ab_data$timestamp)
 ## Calculate the number of days the test lasted.
 max(ab_data$timestamp) - min(ab_data$timestamp)
 
-
-
 ### Unique Values
 #### Unique values for ab_data columns, except date user_id and timestamp
 lapply(ab_data[,3:5], unique) # unique values of group, landing page and converted
