@@ -58,6 +58,11 @@ max(ab_data$timestamp)
 ## Calculate the number of days the test lasted.
 max(ab_data$timestamp) - min(ab_data$timestamp)
 
+### Divide time stamp into am and pm to see if it will have an influence on conversion
+ab_data <- ab_data %>%
+  mutate(time = factor(ifelse(hour(timestamp) >= 12, "PM", "AM"), levels = c("AM", "PM"),
+                       labels = c("AM", "PM")))
+
 ### Unique Values
 #### Unique values for ab_data columns, except date user_id and timestamp
 lapply(ab_data[,3:5], unique) # unique values of group, landing page and converted
@@ -103,8 +108,9 @@ table(ab_data$landing_page)
 ## Generate a frequency table for the group
 table(ab_data$group)
 
+# Join ab_data and countries data frame
+exp_data <- ab_data %>%
+  left_join(countries, by = "user_id")
+
 # Exploratory Data Analysis
-
-
-
-##### Work with timestamp, divide into am and pm, see if it's having an influence on the users conversion
+summary(exp_data)
