@@ -26,6 +26,8 @@ library(tidyverse)
 # Convert object type to tibble
 #ab_data <- as_tibble(ab_data)
 #countries <- as_tibble(countries)
+## Disconnect the database
+#dbDisconnect(conn)
 
 # To ensure code reproducibility, the following will be used.
 
@@ -55,3 +57,17 @@ unique(countries$country) # unique values of country
 unique(is.na(ab_data))
 unique(is.na(countries))
 #### There are no missing values
+
+# Data Preprocessing
+## Coerce character to factor data type
+countries <- countries %>%
+  mutate(country = factor(country))
+ab_data <- ab_data %>%
+  mutate(group = factor(group),
+         landing_page = factor(landing_page),
+         )
+
+
+### Data Summary
+summary(ab_data)
+summary(countries)
