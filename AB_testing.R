@@ -6,6 +6,7 @@ library(RPostgreSQL)
 library(DBI)
 library(dbplyr)
 library(tidyverse)
+library(ggthemes)
 
 # Load Database Driver
 # To practice connecting with a database, the following code was used
@@ -96,7 +97,10 @@ countries <- countries %>%
 
 ab_data <- ab_data %>%
   mutate(group = factor(group),
-         landing_page = factor(landing_page))
+         landing_page = factor(landing_page),
+         converted_meaning = factor(converted,
+                                    levels = c(0,1),
+                                    labels = c("Not Converted", "Converted")))
 
 # Join ab_data and countries data frame
 exp_data <- ab_data %>%
@@ -116,10 +120,39 @@ table(exp_data$group)
 ## Generate a frequency table for country of users
 table(exp_data$country)
 
-# Exploratory Data Analysis
-ggplot(exp_data, aes(country, fill = time))+
-  geom_bar(position = "dodge")+
-  facet_wrap(~factor(converted), scales = "free_y")
+## Generate a frequency table for the landing page according to the group of user
+table(exp_data$group, exp_data$landing_page)
+# This shows group that saw pages they shouldn't see
 
-ggplot(exp_data, aes(timestamp))+
-  geom_freqpoly(bins = 300)
+# Exploratory Data Analysis
+exp_data %>%
+  filter()
+
+### Filter to get the table expression above showing only the groups that are oddly placed.
+
+## Check the number of people that converted that saw the new page
+new_page <- exp_data %>%
+  filter(landing_page == "new_page") %>%
+  group_by(group, factor(converted_meaning)) %>%
+  summarize(num = n()) %>%
+  rename(converted = `factor(converted_meaning)`) %>%
+  mutate(proportion = num/sum(num))
+
+ggplot(new_page, aes(group, proportion, fill = converted))+
+  geom_bar(stat = "identity",
+           position = "dodge")+
+  labs(y = "Convertion rate",
+       fill = "Convert",
+       title = "Convertion Rate Per Group on the New Page")+
+  geom_text(aes(label = round(num,3)), vjust = "outward", hjust = "outward")+
+  scale_fill_manual(values = c("turquoise2", "violetred2"),
+                    label = c("Not Converted", "Converted"))+
+  theme_bw()
+# Control group are not supposed to see the new page, 
+
+ggplot(exp_data, aes(country))+
+  geom_bar(aes(fill = "darksalmon"), show.legend = F)+
+  labs(title = "Number of Customers According to Country")+
+  theme_bw()
+
+
