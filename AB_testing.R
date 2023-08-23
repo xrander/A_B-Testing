@@ -1,5 +1,5 @@
 ## AB TESTING
-#Test for a new webpage by an online store
+#Test for a new webpage by an ECommerce Website
 
 # Loading Libraries
 library(RPostgreSQL)
@@ -98,19 +98,28 @@ ab_data <- ab_data %>%
   mutate(group = factor(group),
          landing_page = factor(landing_page))
 
-### Data Summary
-summary(ab_data)
-summary(countries)
-
-## Generate a frequency table for the landing page
-table(ab_data$landing_page)
-
-## Generate a frequency table for the group
-table(ab_data$group)
-
 # Join ab_data and countries data frame
 exp_data <- ab_data %>%
   left_join(countries, by = "user_id")
 
-# Exploratory Data Analysis
+### Data Summary
+summary(ab_data)
+summary(countries)
 summary(exp_data)
+
+## Generate a frequency table for the landing page
+table(exp_data$landing_page)
+
+## Generate a frequency table for the group
+table(exp_data$group)
+
+## Generate a frequency table for country of users
+table(exp_data$country)
+
+# Exploratory Data Analysis
+ggplot(exp_data, aes(country, fill = time))+
+  geom_bar(position = "dodge")+
+  facet_wrap(~factor(converted), scales = "free_y")
+
+ggplot(exp_data, aes(timestamp))+
+  geom_freqpoly(bins = 300)
