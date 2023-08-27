@@ -125,8 +125,15 @@ table(exp_data$group, exp_data$landing_page)
 # This shows group that saw pages they shouldn't see
 
 # Exploratory Data Analysis
-exp_data %>%
-  filter()
+## Estimate the group of control group that are wrongly placed
+wrong_control_group <- exp_data %>%
+  filter(landing_page == "new_page" & group == "control")
+
+wrong_treatment_group <- exp_data %>%
+  filter(landing_page == "old_page" & group == "treatment")
+
+#wrongly placed group and landing page
+sum(count(wrong_control_group), count(wrong_treatment_group))
 
 ### Filter to get the table expression above showing only the groups that are oddly placed.
 
@@ -136,23 +143,36 @@ new_page <- exp_data %>%
   group_by(group, factor(converted_meaning)) %>%
   summarize(num = n()) %>%
   rename(converted = `factor(converted_meaning)`) %>%
-  mutate(proportion = num/sum(num))
+  mutate(probability = num/sum(num))
 
-ggplot(new_page, aes(group, proportion, fill = converted))+
+ggplot(new_page, aes(group, probability, fill = converted))+
   geom_bar(stat = "identity",
            position = "dodge")+
-  labs(y = "Convertion rate",
+  labs(y = "probability",
        fill = "Convert",
        title = "Convertion Rate Per Group on the New Page")+
-  geom_text(aes(label = round(num,3)), vjust = "outward", hjust = "outward")+
+  geom_text(aes(label = round(probability,3)), vjust = "outward", hjust = "outward")+
   scale_fill_manual(values = c("turquoise2", "violetred2"),
                     label = c("Not Converted", "Converted"))+
+  expand_limits(y = c(0.00, 1.00))+
   theme_bw()
 # Control group are not supposed to see the new page, 
+
+## VIsualizing, the national count data
+country_count <- exp_data %>%
+  group_by(country) %>%
+  summarize(total = length(country))
 
 ggplot(exp_data, aes(country))+
   geom_bar(aes(fill = "darksalmon"), show.legend = F)+
   labs(title = "Number of Customers According to Country")+
-  theme_bw()
+  theme_bw()+
+  geom_text(data = country_count, aes(label = total, y = total+5000))
 
 
+## Filter the wrong group out of the data
+exp_data <- exp_data %>%
+  filter(!timestamp %in% wrong_control_group$timestamp & !timestamp %in% wrong_treatment_group$timestamp)
+
+## Given the new data, calculate the number unique group values and landing_page values
+table(exp_data$landing_page, exp_data$group)
