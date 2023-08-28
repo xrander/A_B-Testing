@@ -37,8 +37,8 @@ ab_data <- read_csv("https://raw.githubusercontent.com/xrander/A_B-Testing/maste
 countries <- read_csv("https://raw.githubusercontent.com/xrander/A_B-Testing/master/countries.csv")
 
 #Preview the data
-head(ab_data)
-head(countries)
+head(ab_data, n = 10)
+head(countries, n = 10)
 
 # Data Structure and Validation
 ## Data Dimensions
@@ -58,6 +58,8 @@ max(ab_data$timestamp)
 
 ## Calculate the number of days the test lasted.
 max(ab_data$timestamp) - min(ab_data$timestamp)
+
+# The test took about 22 days
 
 ### Divide time stamp into am and pm to see if it will have an influence on conversion
 ab_data <- ab_data %>%
@@ -81,7 +83,7 @@ ab_data %>%
   arrange(user_id) #There are no duplicate values from the output
 
 ## Alternatively
-unique(duplicated(ab_data)) # There are no duplicate observations
+sum(duplicated(ab_data)) # There are no duplicate observations
 
 unique(countries$country) # unique values of country
 
@@ -122,7 +124,8 @@ table(exp_data$country)
 
 ## Generate a frequency table for the landing page according to the group of user
 table(exp_data$group, exp_data$landing_page)
-# This shows group that saw pages they shouldn't see
+# This shows group that saw pages they shouldn't see, control group are not supposed to see the new page
+# and treament group should not see old page
 
 # Exploratory Data Analysis
 ## Estimate the group of control group that are wrongly placed
@@ -151,28 +154,30 @@ ggplot(new_page, aes(group, probability, fill = converted))+
   labs(y = "probability",
        fill = "Convert",
        title = "Convertion Rate Per Group on the New Page")+
-  geom_text(aes(label = round(probability,3)), vjust = "outward", hjust = "outward")+
+  geom_text(aes(label = round(probability,3)), vjust = 0.07, hjust = 0.02)+
   scale_fill_manual(values = c("turquoise2", "violetred2"),
                     label = c("Not Converted", "Converted"))+
   expand_limits(y = c(0.00, 1.00))+
   theme_bw()
-# Control group are not supposed to see the new page, 
 
-## VIsualizing, the national count data
+## Visualizing, the national count data
 country_count <- exp_data %>%
   group_by(country) %>%
   summarize(total = length(country))
+country_count
 
-ggplot(exp_data, aes(country))+
-  geom_bar(aes(fill = "darksalmon"), show.legend = F)+
+ggplot(country_count, aes(country, total))+
+  geom_bar(aes(fill = "salmon"),
+           stat = "identity",
+           show.legend = F)+
   labs(title = "Number of Customers According to Country")+
   theme_bw()+
-  geom_text(data = country_count, aes(label = total, y = total+5000))
+  geom_text(aes(label = total, y = total+5000))
 
 
 ## Filter the wrong group out of the data
-exp_data <- exp_data %>%
+clean_ab_data <- exp_data %>%
   filter(!timestamp %in% wrong_control_group$timestamp & !timestamp %in% wrong_treatment_group$timestamp)
 
 ## Given the new data, calculate the number unique group values and landing_page values
-table(exp_data$landing_page, exp_data$group)
+table(clean_ab_data$landing_page, clean_ab_data$group)
