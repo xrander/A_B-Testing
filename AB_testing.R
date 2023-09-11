@@ -14,11 +14,11 @@ library(ggthemes)
 
 # Inserting PostgreSQL Credentials
 #conn <- dbConnect(drv,
- #                dbname = "postgres",
+   #              dbname = "postgres",
   #               host = "localhost",
-   #              port = "5432",
-    #             password = "********",
-     #            user = "postgres")
+ #                port = "5432",
+#                 password = "cashmoney",
+ #                user = "postgres")
 
 # Query DATABASE for the two tables
 #ab_data <- dbGetQuery(conn, "SELECT * FROM ab_data")
@@ -61,14 +61,16 @@ max(ab_data$timestamp) - min(ab_data$timestamp)
 
 # The test took about 22 days
 
+view(ab_data)
+
 ### Divide time stamp into am and pm to see if it will have an influence on conversion
 ab_data <- ab_data %>%
-  mutate(time = factor(ifelse(hour(timestamp) >= 12, "PM", "AM"), levels = c("AM", "PM"),
+  mutate(time_day = factor(ifelse(hour(timestamp) >= 12, "PM", "AM"), levels = c("AM", "PM"),
                        labels = c("AM", "PM")))
 
 ### Unique Values
-#### Unique values for ab_data columns, except date user_id and timestamp
-lapply(ab_data[,3:5], unique) # unique values of group, landing page and converted
+#### Unique values for ab_data columns group, landing page, and converted
+lapply(ab_data[,3:6], unique) # unique values of group, landing page and converted
 
 # Generate Duplicate user id
 dup_user_id <- ab_data %>%
