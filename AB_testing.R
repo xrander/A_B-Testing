@@ -125,7 +125,7 @@ table(exp_data$country)
 ## Generate a frequency table for the landing page according to the group of user
 table(exp_data$group, exp_data$landing_page)
 # This shows group that saw pages they shouldn't see, control group are not supposed to see the new page
-# and treament group should not see old page
+# and treatment group should not see old page
 
 # Exploratory Data Analysis
 ## Estimate the group of control group that are wrongly placed
