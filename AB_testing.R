@@ -3,38 +3,30 @@
 
 # Loading Libraries
 library(RPostgreSQL)
-library(DBI)
 library(dbplyr)
 library(tidyverse)
 library(ggthemes)
 
 # Load Database Driver
-# To practice connecting with a database, the following code was used
-#drv <- dbDriver("PostgreSQL") #PostgreSQL Driver loaded
+drv <- dbDriver("PostgreSQL") #PostgreSQL Driver loaded
 
 # Inserting PostgreSQL Credentials
-#conn <- dbConnect(drv,
-   #              dbname = "postgres",
-  #               host = "localhost",
- #                port = "5432",
-#                 password = "cashmoney",
- #                user = "postgres")
+conn <- dbConnect(drv,
+                 dbname = "postgres",
+                 host = "localhost",
+                 port = "5432",
+                 password = "******",
+                 user = "postgres")
 
-# Query DATABASE for the two tables
-#ab_data <- dbGetQuery(conn, "SELECT * FROM ab_data")
-#countries <- dbGetQuery(conn, "SELECT * FROM countries")
+#Query DATABASE for the two tables
+ab_data <- dbGetQuery(conn, "SELECT * FROM ab_data")
+countries <- dbGetQuery(conn, "SELECT * FROM countries")
 
 # Convert object type to tibble
-#ab_data <- as_tibble(ab_data)
-#countries <- as_tibble(countries)
-## Disconnect the database
-#dbDisconnect(conn)
-
-# To ensure code reproducibility, the following will be used.
-
-# Import the data
-ab_data <- read_csv("https://raw.githubusercontent.com/xrander/A_B-Testing/master/ab_data.csv")
-countries <- read_csv("https://raw.githubusercontent.com/xrander/A_B-Testing/master/countries.csv")
+ab_data <- as_tibble(ab_data)
+countries <- as_tibble(countries)
+# Disconnect the database
+dbDisconnect(conn)
 
 #Preview the data
 head(ab_data, n = 10)
