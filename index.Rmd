@@ -17,10 +17,6 @@ editor_options:
     wrap: 72
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 # Introduction
 In the world of e-commerce, optimizing the conversion rate is a paramount goal. A/B testing is a powerful tool that allows businesses to experiment with changes to their websites and product pages, enabling data-driven decisions for improved conversion rate. This case study presents an A/B test conducted for an ecommerce website to enhance its conversion rate.
 
@@ -47,7 +43,7 @@ The test would last for more between 2 weeks to 4 weeks, during the month of Jan
 ## Data Collection/ Sourcing
 The data was saved on a database, to be queried and imported into R.
 **Importing the required libraries**
-```{r load libraries}
+```{r load-libraries, message=FALSE}
 # For connecting to PostgreSQL database
 library(RPostgreSQL)
 
@@ -57,8 +53,10 @@ library(tidyverse)
 # advanced themes for ggplot visualization
 library(ggthemes)
 ```
+
 **Connecting to the Database**
-```{r}
+The code to connect to the database was excluded for privacy issues.
+```{r connect-database, include=FALSE}
 # Load Database Driver
 drv <- dbDriver("PostgreSQL") #PostgreSQL Driver loaded
 
@@ -67,17 +65,17 @@ conn <- dbConnect(drv,
                  dbname = "postgres",
                  host = "localhost",
                  port = "5432",
-                 password = "******",
+                 password = "cashmoney",
                  user = "postgres")
 ```
 
 Next, we return a list of all the tables in the database so we can get the tables we will be needing for the test
-```{r list_of_tables}
+```{r list-of-tables}
 dbListTables(conn)
 ```
 
 Query database to collect required data and preview the tables
-```{r load_required_tables}
+```{r load-required-tables}
 # load the tables
 ab_data <- as_tibble(dbGetQuery(conn, "SELECT * FROM ab_data"))
 countries <- as_tibble(dbGetQuery(conn, "SELECT * FROM countries"))
@@ -89,14 +87,14 @@ head(countries)
 
 ## Data Structure and Data Manipulation
 First we get the structure of both tables.
-```{r}
+```{r data-structure}
 str(ab_data)
 str(countries)
 ```
 The data frame ab_data is having `r dim(ab_data)[1]` rows and `r dim(ab_data)[2]` columns, while the countries data frame is having `r dim(countries)[1]` rows and `r dim(countries)[2]`` columns. Both data are related by user_id variable.
 
 
-```{r}
+```{r join-data}
 # join the data
 ab_data_combined <- ab_data %>%
   left_join(countries, by = "user_id")
@@ -105,7 +103,7 @@ ab_data_combined <- ab_data %>%
 ## Data Definition
 - **user_id**: the unique identifier for each visitor in the dataset.
 
-- **timestamp**: the date and time the user enter the page
+- **timestamp**: the date and time the user enter the page.
 
 - **group**: category of the experiment to which users belong to.
 
@@ -118,7 +116,62 @@ ab_data_combined <- ab_data %>%
 
 - Response indicator: converted
 
-
-```{r pressure, echo=FALSE}
-
+# Data Analysis
+## Randomization check
+The first thing to do is to check if the randomization have been done properly and is equal between the treatments.
+```{r frequency-preview}
+table(ab_data_combined$group, ab_data_combined$landing_page)
 ```
+
+There seems to be some data that has been misplaced, control group should be old_pages, treatment group should be new_pages.
+Next we instigated which of the variables have been wrongly placed
+```{r landing-page-sum}
+colSums(table(ab_data_combined$group, ab_data_combined$landing_page))
+```
+The landing_page variable is correctly randomized.
+```{r group-sum}
+rowSums(table(ab_data_combined$group, ab_data_combined$landing_page))
+```
+The group variable is wrongly randomized and will be corrected.
+
+### Fixing Randomization
+```{r randomization-fix}
+# replace wrongly placed control and treatment group
+ab_data_combined <- ab_data_combined %>%
+  mutate(group = ifelse(landing_page == "new_page", "treatment", "control"))
+
+# check for correct randomization
+table(ab_data_combined$group, ab_data_combined$landing_page)
+```
+
+The randomization has been fixed and the experiment can continue without issues
+## Missing Data
+After correcting the randomization, we check if there are missing in any of the column of the data frame.
+```{r}
+anyNA(ab_data_combined)
+```
+There are no missing data
+
+## Exploratory Data Analysis
+### Total number of responses
+The total number of customers in the experiment are `r length(ab_data_combined$user_id)` from `r length(unique(ab_data_combined$country))` countries.
+
+```{r}
+ab_data_combined %>%
+  ggplot(aes(group, fill = country))+
+  geom_bar(position = "dodge")+
+  scale_fill_manual(values = c("yellow4", "wheat4", "tan4"))
+  theme_minimal()+
+  ggtitle("Frequency of Groups According to Countries")
+  
+```
+
+```{r}
+ab_data_combined %>%
+  ggplot(aes(factor(converted), fill = group))+
+  geom_bar(position = "dodge2")+
+  labs(x = "Converted",
+       y = "Frequency")+
+  theme_minimal()
+```
+
