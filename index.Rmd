@@ -152,7 +152,7 @@ anyNA(ab_data_combined)
 ```
 There are no missing data
 
-## Exploratory Data Analysis
+## EDA
 ### Total number of responses
 The total number of customers in the experiment are `r length(ab_data_combined$user_id)` from `r length(unique(ab_data_combined$country))` countries.
 
@@ -160,18 +160,71 @@ The total number of customers in the experiment are `r length(ab_data_combined$u
 ab_data_combined %>%
   ggplot(aes(group, fill = country))+
   geom_bar(position = "dodge")+
-  scale_fill_manual(values = c("yellow4", "wheat4", "tan4"))
+  scale_fill_manual(values = c("yellow4", "wheat4", "tan4"))+
   theme_minimal()+
   ggtitle("Frequency of Groups According to Countries")
   
 ```
 
+### Frequency of Members That Converted
 ```{r}
 ab_data_combined %>%
-  ggplot(aes(factor(converted), fill = group))+
+  filter(converted == 1) %>%
+  ggplot(aes(country, fill = group))+
   geom_bar(position = "dodge2")+
-  labs(x = "Converted",
-       y = "Frequency")+
+  scale_fill_manual(values = c("tan4", "wheat4"))+
+  labs(y = "Frequency",
+       title = "Frequency of Converted Customer Across the Various Regions")+
   theme_minimal()
 ```
 
+
+## Data Analysis
+### Probability of Conversion for the Groups
+```{r}
+ab_data_combined %>%
+  group_by(group, landing_page) %>%
+  summarize(prob = sum(converted)/length(converted))
+```
+### Is the probability of being converted equal across landing page?
+```{r}
+prop.test(xtabs(~landing_page + converted, data = ab_data_combined)[, 2:1])
+```
+There are no differences across the landing page, and the probability of conversion is more or less the same as presented by the p-value
+
+### Do conversion changes across the landing page
+```{r}
+t.test(converted~landing_page, data = ab_data_combined)
+```
+t-test shows that there is no significant difference between the landing pages as the confidence interval is close to zero for the means of both pages.
+
+### Does conversion rate changes across Country Borders
+```{r}
+ab_data_combined %>%
+  group_by(country) %>%
+  summarise(prob = sum(converted)/length(converted))
+```
+The probability of conversion seems to be similar across regions, but I will carry out a test to compare the 3 regions
+
+### One Way Anova Test
+```{r}
+anova_test <- aov(converted ~ country, data = ab_data_combined)
+
+summary(anova_test)
+```
+
+The p-value shows that that country does not an effect on the conversion rate of the store.
+# Summary
+While test and visuals has shown that there's no significant difference between the landing pages we can note that:
+- the old page (mean conversion rate = 0.1205) is likely to convert more than the new page (mean conversion rate = 0.1188)
+
+- A p-value of 0.1712 implies that there's a 17.12% probability of observing a difference as extreme as the one observed, but we can't take this as a significant difference as there isn't strong evidence to reject that the pages are having the same effect.
+
+- Given preliminary test, there's no need to move on with the new_page, and saving cost is advisable here.
+
+- Country do not also have an effect on the conversion rate.
+
+
+# Conclusion and Recommendation
+An AB Test was carried out to test if a new landing page should be implemented by an online store, to increase its conversion rate of its customers. After comparing the means, and test of significant, it is recommended to keep the old landing page as it is more effective than the new page, even if it doesn't really differ.
+However, to save cost, it is advised to keep the old landing page
